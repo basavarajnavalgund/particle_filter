@@ -1,4 +1,4 @@
-#include "../lib/matplotlibcpp.h" //Graph Library
+// #include "../lib/matplotlibcpp.h" //Graph Library
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -6,15 +6,39 @@
 #include <random> //C++ 11 Random Numbers
 #include <vector>
 
-namespace plt = matplotlibcpp;
+
+/*
+
+We have 2D map of size 100*100. It is a cyclic world, hence the robot can cross the walls from other side.
+Robot can rotate left, right, and move forward. It can measure it's distance to the 8 landmarks via range finder sensor.
+We aim to estimate the robot pose using Particle Filter as it moves and senses the environment.
+
+MCL - Monte Carlo Localization:
+1. Noise (Simulate Noise and add to the measurements)
+2. Motion and Sensing (Move the robot and measure it's distance to the landmarks)
+3. Generate Particles (Particles are generated, motion is assigned to each of them,
+    and Randomly & Uniformly spread particles throughout the map)
+4. Importance weight (Evaluate importance weight of each particles)
+5. Resample (resample the particles)
+6. Error (Calculate the error value to check the overall quality of filter solution,
+    this will enable us to identify how close the particle are to the robot)
+7. Graphing (Plug the position of the robot and particles at each iteration of the PF)
+
+Author: Basavaraj Navalgund <basavarajnavalgund97 [at] gmail [dot] com>
+
+*/
+
+
+
+// namespace plt = matplotlibcpp;
 using namespace std;
 
-// Landmarks
+// Landmarks 
 double landmarks[8][2] = { { 20.0, 20.0 }, { 20.0, 80.0 }, { 20.0, 50.0 },
     { 50.0, 20.0 }, { 50.0, 80.0 }, { 80.0, 80.0 },
     { 80.0, 20.0 }, { 80.0, 50.0 } };
 
-// Map size in meters
+// Map size in meters (100*100)
 double world_size = 100.0;
 
 // Random Generators
@@ -30,6 +54,7 @@ public:
     Robot()
     {
         // Constructor
+        //Instanciated robot in the beginning will have the random position and orientation (x, y, thetha)
         x = gen_real_random() * world_size; // robot's x coordinate
         y = gen_real_random() * world_size; // robot's y coordinate
         orient = gen_real_random() * 2.0 * M_PI; // robot's orientation
@@ -41,7 +66,7 @@ public:
 
     void set(double new_x, double new_y, double new_orient)
     {
-        // Set robot new position and orientation
+        // Update the robot position and orientation
         if (new_x < 0 || new_x >= world_size)
             throw std::invalid_argument("X coordinate out of bound");
         if (new_y < 0 || new_y >= world_size)
@@ -56,7 +81,7 @@ public:
 
     void set_noise(double new_forward_noise, double new_turn_noise, double new_sense_noise)
     {
-        // Simulate noise, often useful in particle filters
+        // Simulate noise i.e. add random noise to robot's pose(x, y, thetha) and measurement
         forward_noise = new_forward_noise;
         turn_noise = new_turn_noise;
         sense_noise = new_sense_noise;
@@ -64,7 +89,7 @@ public:
 
     vector<double> sense()
     {
-        // Measure the distances from the robot toward the landmarks
+        // Robot can measure it's distance from each landmarks via laserscan/range finder sensor
         vector<double> z(sizeof(landmarks) / sizeof(landmarks[0]));
         double dist;
 
@@ -78,6 +103,7 @@ public:
 
     Robot move(double turn, double forward)
     {
+        // Robot can rotare (Left, Right) and move forward
         if (forward < 0)
             throw std::invalid_argument("Robot cannot move backward");
 
@@ -123,7 +149,8 @@ public:
 
     double measurement_prob(vector<double> measurement)
     {
-        // Calculates how likely a measurement should be
+        // Takes Actual measurement vector and compares it with Predicted measurements
+        // Computes the probability of how close the Predicted measurements are to the actual once
         double prob = 1.0;
         double dist;
 
@@ -173,13 +200,17 @@ double evaluation(Robot r, Robot p[], int n)
     double sum = 0.0;
     for (int i = 0; i < n; i++) {
         //the second part is because of world's cyclicity
+        // Comparing the x/y pose of robot with x/y pose of particle 
         double dx = mod((p[i].x - r.x + (world_size / 2.0)), world_size) - (world_size / 2.0);
         double dy = mod((p[i].y - r.y + (world_size / 2.0)), world_size) - (world_size / 2.0);
+        // Eucledian dist of differences
         double err = sqrt(pow(dx, 2) + pow(dy, 2));
         sum += err;
     }
+    // Computing the avg error of each particle relative to the robot pose
     return sum / n;
 }
+
 double max(double arr[], int n)
 {
     // Identify the max element in an array
@@ -191,48 +222,58 @@ double max(double arr[], int n)
     return max;
 }
 
-void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
-{
-    //Draw the robot, landmarks, particles and resampled particles on a graph
+// void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
+// {
+//     //Draw the robot, landmarks, particles and resampled particles on a graph
 
-    //Graph Format
-    plt::title("MCL, step " + to_string(step));
-    plt::xlim(0, 100);
-    plt::ylim(0, 100);
+//     //Graph Format
+//     plt::title("MCL, step " + to_string(step));
+//     plt::xlim(0, 100);
+//     plt::ylim(0, 100);
 
-    //Draw particles in green
-    for (int i = 0; i < n; i++) {
-        plt::plot({ p[i].x }, { p[i].y }, "go");
-    }
+//     //Draw particles in green
+//     for (int i = 0; i < n; i++) {
+//         plt::plot({ p[i].x }, { p[i].y }, "go");
+//     }
 
-    //Draw resampled particles in yellow
-    for (int i = 0; i < n; i++) {
-        plt::plot({ pr[i].x }, { pr[i].y }, "yo");
-    }
+//     //Draw resampled particles in yellow
+//     for (int i = 0; i < n; i++) {
+//         plt::plot({ pr[i].x }, { pr[i].y }, "yo");
+//     }
 
-    //Draw landmarks in red
-    for (int i = 0; i < sizeof(landmarks) / sizeof(landmarks[0]); i++) {
-        plt::plot({ landmarks[i][0] }, { landmarks[i][1] }, "ro");
-    }
+//     //Draw landmarks in red
+//     for (int i = 0; i < sizeof(landmarks) / sizeof(landmarks[0]); i++) {
+//         plt::plot({ landmarks[i][0] }, { landmarks[i][1] }, "ro");
+//     }
 
-    //Draw robot position in blue
-    plt::plot({ robot.x }, { robot.y }, "bo");
+//     //Draw robot position in blue
+//     plt::plot({ robot.x }, { robot.y }, "bo");
 
-    //Save the image and close the plot
-    plt::save("../images/step" + to_string(step) + ".png");
-    plt::clf();
-}
+//     //Save the image and close the plot
+//     plt::save("../images/step" + to_string(step) + ".png");
+//     plt::clf();
+// }
 
 int main()
 {
-    //Practice Interfacing with Robot Class
+    // MCL:
+    // 1.Noise (Simulate Noise and add to the measurements)
+    // 2.Motion and Sensing (Move the robot and measure it's distance to the landmarks)
+    //   and Printing the distance from the robot toward the eight landmarks
     Robot myrobot;
     myrobot.set_noise(5.0, 0.1, 5.0);
     myrobot.set(30.0, 50.0, M_PI / 2.0);
+    // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
     myrobot.move(-M_PI / 2.0, 15.0);
-    //cout << myrobot.read_sensors() << endl;
+    // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
     myrobot.move(-M_PI / 2.0, 10.0);
-    //cout << myrobot.read_sensors() << endl;
+    // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
+
+    // 3.Generate Particles (Particles are generated, motion is assigned to each of them,
+    //   and Randomly & Uniformly spread particles throughout the map)
 
     // Create a set of particles
     int n = 1000;
@@ -243,7 +284,7 @@ int main()
         //cout << p[i].show_pose() << endl;
     }
 
-    //Re-initialize myrobot object and Initialize a measurment vector
+    //Re-initialize myrobot object and Initialize a measurement vector
     myrobot = Robot();
     vector<double> z;
 
@@ -262,14 +303,19 @@ int main()
             p[i] = p2[i];
         }
 
-        //Generate particle weights depending on robot's measurement
+        // 4.Assign importance weight to each one of generated particles
+        //   Compare the Actual measurements i.e. 'z' (sensor: measure robot to landmarks) to the 
+        //   Predicted measurements (measure each particle to 8 landmarks).
+        //   The mismatch between actual measurement of the robot ans predicted measurement of each particle 
+        //   is known as particles importance weight.
+        //   Larger the weight, more important the particle is and more likely to represent the robot's actual position.
         double w[n];
         for (int i = 0; i < n; i++) {
             w[i] = p[i].measurement_prob(z);
             //cout << w[i] << endl;
         }
 
-        //Resample the particles with a sample probability proportional to the importance weight
+        // 5. Resample the particles with a sample probability proportional to the importance weight
         Robot p3[n];
         int index = gen_real_random() * n;
         //cout << index << endl;
@@ -289,13 +335,12 @@ int main()
             //cout << p[k].show_pose() << endl;
         }
 
-        //Evaluate the Error
+        // 6.Evaluate the Error
+        // Computing the avg dist between the particles and the robot
         cout << "Step = " << t << ", Evaluation = " << evaluation(myrobot, p, n) << endl;
 
-        //####   DON'T MODIFY ANYTHING ABOVE HERE! ENTER CODE BELOW ####
-
-        //Graph the position of the robot and the particles at each step
-        visualization(n, myrobot, t, p2, p3);
+        // 7.Graph the position of the robot and the particles at each step
+        // visualization(n, myrobot, t, p2, p3);
 
     } //End of Steps loop
 
