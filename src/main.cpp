@@ -1,4 +1,4 @@
-// #include "../lib/matplotlibcpp.h" //Graph Library
+#include "../lib/matplotlibcpp.h" //Graph Library
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -30,7 +30,7 @@ Author: Basavaraj Navalgund <basavarajnavalgund97 [at] gmail [dot] com>
 
 
 
-// namespace plt = matplotlibcpp;
+namespace plt = matplotlibcpp;
 using namespace std;
 
 // Landmarks 
@@ -222,37 +222,37 @@ double max(double arr[], int n)
     return max;
 }
 
-// void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
-// {
-//     //Draw the robot, landmarks, particles and resampled particles on a graph
+void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
+{
+    //Draw the robot, landmarks, particles and resampled particles on a graph
 
-//     //Graph Format
-//     plt::title("MCL, step " + to_string(step));
-//     plt::xlim(0, 100);
-//     plt::ylim(0, 100);
+    //Graph Format
+    plt::title("MCL, step " + to_string(step));
+    plt::xlim(0, 100);
+    plt::ylim(0, 100);
 
-//     //Draw particles in green
-//     for (int i = 0; i < n; i++) {
-//         plt::plot({ p[i].x }, { p[i].y }, "go");
-//     }
+    //Draw particles in green
+    for (int i = 0; i < n; i++) {
+        plt::plot({ p[i].x }, { p[i].y }, "go");
+    }
 
-//     //Draw resampled particles in yellow
-//     for (int i = 0; i < n; i++) {
-//         plt::plot({ pr[i].x }, { pr[i].y }, "yo");
-//     }
+    //Draw resampled particles in yellow
+    for (int i = 0; i < n; i++) {
+        plt::plot({ pr[i].x }, { pr[i].y }, "yo");
+    }
 
-//     //Draw landmarks in red
-//     for (int i = 0; i < sizeof(landmarks) / sizeof(landmarks[0]); i++) {
-//         plt::plot({ landmarks[i][0] }, { landmarks[i][1] }, "ro");
-//     }
+    //Draw landmarks in red
+    for (int i = 0; i < sizeof(landmarks) / sizeof(landmarks[0]); i++) {
+        plt::plot({ landmarks[i][0] }, { landmarks[i][1] }, "ro");
+    }
 
-//     //Draw robot position in blue
-//     plt::plot({ robot.x }, { robot.y }, "bo");
+    //Draw robot position in blue
+    plt::plot({ robot.x }, { robot.y }, "bo");
 
-//     //Save the image and close the plot
-//     plt::save("../images/step" + to_string(step) + ".png");
-//     plt::clf();
-// }
+    //Save the image and close the plot
+    plt::save("../images/step" + to_string(step) + ".png");
+    plt::clf();
+}
 
 int main()
 {
@@ -340,11 +340,7 @@ int main()
         cout << "Step = " << t << ", Evaluation = " << evaluation(myrobot, p, n) << endl;
 
         // 7.Graph the position of the robot and the particles at each step
-<<<<<<< HEAD
-        // visualization(n, myrobot, t, p2, p3);
-=======
         visualization(n, myrobot, t, p2, p3);
->>>>>>> 363177463e8f628fde1a8bd69b3fcd3c78a66110
 
     } //End of Steps loop
 
