@@ -340,7 +340,11 @@ int main()
         cout << "Step = " << t << ", Evaluation = " << evaluation(myrobot, p, n) << endl;
 
         // 7.Graph the position of the robot and the particles at each step
+<<<<<<< HEAD
         // visualization(n, myrobot, t, p2, p3);
+=======
+        visualization(n, myrobot, t, p2, p3);
+>>>>>>> 363177463e8f628fde1a8bd69b3fcd3c78a66110
 
     } //End of Steps loop
 
