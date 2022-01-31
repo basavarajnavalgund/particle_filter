@@ -9,10 +9,13 @@
 
 /*
 
-Robot initialization:
+We have 2D map of size 100*100. It is a cyclic world, hence the robot can cross the walls from other side.
+Robot can rotate left, right, and move forward. It can measure it's distance to the 8 landmarks via range finder sensor.
+We aim to estimate the robot pose using Particle Filter as it moves and senses the environment.
+
+MCL - Monte Carlo Localization:
 1. Noise (Simulate Noise and add to the measurements)
 2. Motion and Sensing (Move the robot and measure it's distance to the landmarks)
-Particle Filter:
 3. Generate Particles (Particles are generated, motion is assigned to each of them,
     and Randomly & Uniformly spread particles throughout the map)
 4. Importance weight (Evaluate importance weight of each particles)
@@ -253,23 +256,24 @@ void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
 
 int main()
 {
-    // Robot initialization:
-    // 1. Noise (Simulate Noise and add to the measurements)
-    // 2. Motion and Sensing (Move the robot and measure it's distance to the landmarks)
-    //    and Printing the distance from the robot toward the eight landmarks
+    // MCL:
+    // 1.Noise (Simulate Noise and add to the measurements)
+    // 2.Motion and Sensing (Move the robot and measure it's distance to the landmarks)
+    //   and Printing the distance from the robot toward the eight landmarks
     Robot myrobot;
     myrobot.set_noise(5.0, 0.1, 5.0);
     myrobot.set(30.0, 50.0, M_PI / 2.0);
-    myrobot.move(-M_PI / 2.0, 15.0);
-    //cout << myrobot.read_sensors() << endl;
-    myrobot.move(-M_PI / 2.0, 10.0);
-    //cout << myrobot.read_sensors() << endl;
     // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
+    myrobot.move(-M_PI / 2.0, 15.0);
+    // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
+    myrobot.move(-M_PI / 2.0, 10.0);
+    // cout << "Pose of robot: " << myrobot.show_pose() << endl;
+    // cout << myrobot.read_sensors() << endl;
 
-
-    // Particle Filter:
-    // 3. Generate Particles (Particles are generated, motion is assigned to each of them,
-    // and Randomly & Uniformly spread particles throughout the map)
+    // 3.Generate Particles (Particles are generated, motion is assigned to each of them,
+    //   and Randomly & Uniformly spread particles throughout the map)
 
     // Create a set of particles
     int n = 1000;
@@ -299,12 +303,12 @@ int main()
             p[i] = p2[i];
         }
 
-        // 4. Assign importance weight to each one of generated particles
-        //    Compare the Actual measurements i.e. 'z' (sensor: measure robot to landmarks) to the 
-        //    Predicted measurements (measure each particle to 8 landmarks).
-        //    The mismatch between actual measurement of the robot ans predicted measurement of each particle 
-        //    is known as particles importance weight.
-        //    Larger the weight, more important the particle is and more likely to represent the robot's actual position.
+        // 4.Assign importance weight to each one of generated particles
+        //   Compare the Actual measurements i.e. 'z' (sensor: measure robot to landmarks) to the 
+        //   Predicted measurements (measure each particle to 8 landmarks).
+        //   The mismatch between actual measurement of the robot ans predicted measurement of each particle 
+        //   is known as particles importance weight.
+        //   Larger the weight, more important the particle is and more likely to represent the robot's actual position.
         double w[n];
         for (int i = 0; i < n; i++) {
             w[i] = p[i].measurement_prob(z);
@@ -331,11 +335,11 @@ int main()
             //cout << p[k].show_pose() << endl;
         }
 
-        // 6. Evaluate the Error
+        // 6.Evaluate the Error
         // Computing the avg dist between the particles and the robot
         cout << "Step = " << t << ", Evaluation = " << evaluation(myrobot, p, n) << endl;
 
-        // 7. Graph the position of the robot and the particles at each step
+        // 7.Graph the position of the robot and the particles at each step
         visualization(n, myrobot, t, p2, p3);
 
     } //End of Steps loop
